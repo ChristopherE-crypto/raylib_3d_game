@@ -1,6 +1,6 @@
 #include <raylib.h>
 #include <raymath.h>
-
+#include "game.h"
 
 void drawGround(float groundWidth, float groundHeight, float groundLength, Color groundColor, int numSegments, float groundStartZ)
 {
@@ -12,6 +12,52 @@ void drawGround(float groundWidth, float groundHeight, float groundLength, Color
     DrawCube(groundPos, groundWidth, groundHeight, groundLength, groundColor);
     DrawCubeWires(groundPos, groundWidth, groundHeight, groundLength, groundColor);
   }
+
+}
+
+// function used for detecting collision (Bounding boxes)
+void updatePlayerBounds(Vector3 playerPos, Vector3 playerSize, Vector3& playerMin, Vector3& playerMax)
+{
+  // playerMin and playerMax are references so that this function can update the player struct fields
+  playerMin = (Vector3)
+  {
+    playerPos.x - playerSize.x/2,
+    playerPos.y - playerSize.y/2,
+    playerPos.z - playerSize.z/2
+  };
+  playerMax = (Vector3)
+  {
+    playerPos.x + playerSize.x/2,
+    playerPos.y + playerSize.y/2,
+    playerPos.z + playerSize.z/2
+  };
+
+}
+
+void updateObstacleBounds(Vector3 obstaclePos, Vector3 obstacleSize, Vector3& obstacleMin, Vector3& obstacleMax)
+{
+  obstacleMin = (Vector3)
+  {
+    obstaclePos.x - obstacleSize.x/2,
+    obstaclePos.y - obstacleSize.y/2,
+    obstaclePos.z - obstacleSize.z/2
+  };
+  obstacleMax = (Vector3)
+  {
+    obstaclePos.x + obstacleSize.x/2,
+    obstaclePos.y + obstacleSize.y/2,
+    obstaclePos.z + obstacleSize.z/2
+  };
+}
+
+bool CheckCollisionPlayerObstacle(Vector3 playerMin, Vector3 playerMax, Vector3 obstacleMin, Vector3 obstacleMax)
+{
+
+  BoundingBox playerBox = {playerMin, playerMax};
+  
+  BoundingBox obstacleBox = {obstacleMin, obstacleMax};
+  
+  return CheckCollisionBoxes(playerBox, obstacleBox);
 
 }
 
@@ -38,9 +84,20 @@ int main()
   float playerLength = 1.0f;
   Color playerColor = GREEN;
 
+  // use player struct from game.h
+  Player player = {
+    playerPos,
+    (Vector3) {playerWidth, playerHeight, playerLength},
+    playerColor,
+    {0},
+    {0}
+  };
+
   // movement variables
   float currentForwardSpeed = 5.0f;
   float speedIncreaseRate = 0.1f;
+  float lateralSpeed = 7.0f;
+  float boundary = 8.0f;
 
   // ground data
   float groundWidth = 20.0f;
@@ -60,9 +117,15 @@ int main()
     playerPos.z -= currentForwardSpeed * deltaTime;
     currentForwardSpeed += speedIncreaseRate * deltaTime;
 
+    // handle player lateral movement
+    if(IsKeyDown(KEY_A)) player.position.x -= lateralSpeed * deltaTime;
+    if(IsKeyDown(KEY_D)) player.position.x += lateralSpeed * deltaTime;
+    player.position.x = Clamp(player.position.x, -boundary, boundary);
+
+
     // update camera position
-    camera.target = (Vector3) {playerPos.x, playerPos.y + 1.0f, playerPos.z};
-    camera.position = (Vector3) {Lerp(camera.position.x, playerPos.x, 0.1f), 5.0f, playerPos.z + 10.0f};
+    camera.target = (Vector3) {player.position.x, player.position.y + 1.0f, player.position.z};
+    camera.position = (Vector3) {Lerp(camera.position.x, player.position.x, 0.1f), 5.0f, player.position.z + 10.0f};
 
     BeginDrawing();
 
@@ -74,8 +137,8 @@ int main()
     drawGround(groundWidth, groundHeight, groundLength, groundColor, numGroundSegments, groundStartZ);
 
     // draw the player as a green cube
-    DrawCube(playerPos, playerWidth, playerHeight, playerLength, playerColor);
-    DrawCubeWires(playerPos, playerWidth, playerHeight, playerLength, DARKGREEN);
+    DrawCube(player.position, player.size.x, player.size.y, player.size.z, player.color);
+    DrawCubeWires(player.position, player.size.x, player.size.y, player.size.z, DARKGREEN);
 
     EndMode3D();
 
