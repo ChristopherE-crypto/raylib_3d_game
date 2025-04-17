@@ -25,9 +25,23 @@ int main()
   float playerLength = 1.0f;
   Color playerColor = GREEN;
 
+  // movement variables
+  float currentForwardSpeed = 5.0f;
+  float speedIncreaseRate = 0.1f;
+
   // game loop
   while(!WindowShouldClose())
   {
+
+    float deltaTime = GetFrameTime();
+  
+    // make the player move forward continuously
+    playerPos.z -= currentForwardSpeed * deltaTime;
+    currentForwardSpeed += speedIncreaseRate * deltaTime;
+
+    // update camera position
+    camera.target = (Vector3) {playerPos.x, playerPos.y + 1.0f, playerPos.z};
+    camera.position = (Vector3) {Lerp(camera.position.x, playerPos.x, 0.1f), 5.0f, playerPos.z + 10.0f};
 
     BeginDrawing();
 
