@@ -2,6 +2,19 @@
 #include <raymath.h>
 
 
+void drawGround(float groundWidth, float groundHeight, float groundLength, Color groundColor, int numSegments, float groundStartZ)
+{
+  // p, w, h, l, c
+  for(int i = 0; i < numSegments; i++)
+  {
+    float segmentZ = groundStartZ + i * groundLength;
+    Vector3 groundPos = {0.0f, -groundHeight/2, segmentZ + groundLength/2};
+    DrawCube(groundPos, groundWidth, groundHeight, groundLength, groundColor);
+    DrawCubeWires(groundPos, groundWidth, groundHeight, groundLength, groundColor);
+  }
+
+}
+
 int main()
 {
   // window creation
@@ -29,6 +42,14 @@ int main()
   float currentForwardSpeed = 5.0f;
   float speedIncreaseRate = 0.1f;
 
+  // ground data
+  float groundWidth = 20.0f;
+  float groundHeight = 0.1f;
+  float groundLength = 100.0f;
+  Color groundColor = GRAY;
+  int numGroundSegments = 3;
+  float groundStartZ = -groundLength * 2;
+
   // game loop
   while(!WindowShouldClose())
   {
@@ -49,8 +70,10 @@ int main()
 
     BeginMode3D(camera);
 
-    DrawPlane((Vector3){0.0f, 0.0f, 0.0f}, (Vector2) {20.0f, 20.0f}, GRAY);
+    // draw the ground using a cube
+    drawGround(groundWidth, groundHeight, groundLength, groundColor, numGroundSegments, groundStartZ);
 
+    // draw the player as a green cube
     DrawCube(playerPos, playerWidth, playerHeight, playerLength, playerColor);
     DrawCubeWires(playerPos, playerWidth, playerHeight, playerLength, DARKGREEN);
 
