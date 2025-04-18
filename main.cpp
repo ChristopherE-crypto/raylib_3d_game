@@ -169,6 +169,7 @@ int main()
   float scoreTimer = 0.0f;
   float gameOverTimer = 0.0f;
   Vector3 worldOffset = {0};
+  const float rebaseThreshold = 100.0f;
 
   // game loop
   while(!WindowShouldClose())
@@ -199,6 +200,28 @@ int main()
       jumpVelocity -= gravity * deltaTime;
       player.position.y += jumpVelocity * deltaTime;
 
+      // deal with obstacles shaking after some time
+      if(fabsf(player.position.z) > rebaseThreshold)
+      {
+        worldOffset.z += player.position.z;
+
+        player.position.z = 0;
+
+        for(int i = 0; i < game.activeObstacles; i++)
+        {
+          game.obstaclePool[i].position.z -= worldOffset.z;
+        }
+
+        groundStartZ -= worldOffset.z;
+        worldOffset.z = 0;
+      }
+
+
+      // extend the ground for infinite ground effect
+      if(player.position.z < groundStartZ + groundLength/2)
+      {
+        groundStartZ -= groundLength;
+      }
 
       // collisions
       handleCollisions(player.position, player.size, jumpVelocity, obstacles, groundLevel, isGrounded);
