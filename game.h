@@ -10,6 +10,7 @@ struct Obstacle {
     Color color;
     Vector3 minBounds;
     Vector3 maxBounds;
+    Model model;
 };
 
 struct Player {
@@ -51,6 +52,7 @@ struct Game {
   std::vector<Obstacle> obstaclePool;
   int activeObstacles = 0;
   const int MAX_OBSTACLES = 100;
+  std::vector<Model> obstacleModels;
 };
 
 #endif
