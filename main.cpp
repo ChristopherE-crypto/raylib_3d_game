@@ -161,7 +161,6 @@ void loadAllObstacleModels(Game& game)
 {
   game.obstacleModels.push_back(loadObstacleModel("./assets/car_1.glb"));
   game.obstacleModels.push_back(loadObstacleModel("./assets/car_2.glb"));
-  game.obstacleModels.push_back(loadObstacleModel("./assets/car_3.glb"));
   game.obstacleModels.push_back(loadObstacleModel("./assets/car_4.glb"));
 }
 
@@ -224,7 +223,7 @@ int main()
   std::vector<Obstacle> obstacles;
   float obstacleSpawnTimer = 0.0f;
   float obstacleSpawnInterval = 2.0f;
-  float obstacleZOffset = 30.0f;
+  float obstacleZOffset = 80.0f;
 
   // movement variables
   float forwardSpeed = 5.0f;
@@ -232,6 +231,8 @@ int main()
   float speedIncreaseRate = 0.1f;
   float lateralSpeed = 7.0f;
   float boundary = 8.0f;
+  float obstacleSpeed = 3.0f;
+  float currentObstacleSpeed = 0.0f;
 
   // jumping variables
   bool isGrounded = false;
@@ -244,8 +245,8 @@ int main()
   float groundHeight = 0.1f;
   float groundLength = 100.0f;
   Color groundColor = DARKGRAY;
-  int numGroundSegments = 3;
-  float groundStartZ = -groundLength * 2;
+  int numGroundSegments = 5;
+  float groundStartZ = -groundLength * (numGroundSegments - 1);
   const float groundLevel = 1.0f;
 
   // game variables
@@ -261,6 +262,8 @@ int main()
   {
 
     float deltaTime = GetFrameTime();
+
+    currentObstacleSpeed = obstacleSpeed * (currentForwardSpeed / forwardSpeed);
 
     if(gameRunning)
     {
@@ -303,13 +306,18 @@ int main()
 
 
       // extend the ground for infinite ground effect
-      if(player.position.z < groundStartZ + groundLength/2)
+      if(player.position.z < groundStartZ + groundLength)
       {
         groundStartZ -= groundLength;
       }
 
       // collisions
       handleCollisions(player.position, player.size, jumpVelocity, obstacles, groundLevel, isGrounded);
+
+      for(int i = 0; i < game.activeObstacles; i++)
+      {
+        game.obstaclePool[i].position.z += currentObstacleSpeed * deltaTime;
+      }
 
       // spawn obstacles
       obstacleSpawnTimer += deltaTime;
@@ -344,7 +352,7 @@ int main()
       // handles obstacle removal
       for(int i = 0; i < game.activeObstacles;)
       {
-        if(game.obstaclePool[i].position.z > player.position.z + 10.0f)
+        if(game.obstaclePool[i].position.z > player.position.z + 30.0f)
         {
           if(i != game.activeObstacles - 1)
           {
@@ -422,7 +430,7 @@ int main()
       const Obstacle& obstacle = game.obstaclePool[i];
       
       Vector3 modelPos = Vector3Add(obstacle.position, (Vector3) {0.0f, -0.5f, 0.0f});
-      DrawModelEx(obstacle.model, modelPos, (Vector3) {0.0f, 1.0f, 0.0f}, 180.0f, (Vector3) {carModelScale, carModelScale, carModelScale}, WHITE);
+      DrawModelEx(obstacle.model, modelPos, (Vector3) {0.0f, 1.0f, 0.0f}, 180.0f, (Vector3) {1.5f, 1.5f, 1.5f}, WHITE);
       
       if(checkCollisionPlayerObstacle(player.minBounds, player.maxBounds, obstacle.position, obstacle.size, obstacle.minBounds, obstacle.maxBounds))
       {
