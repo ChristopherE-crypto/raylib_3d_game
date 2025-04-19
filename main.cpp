@@ -3,8 +3,14 @@
 #include "game.h"
 
 /*
- * CAR 3D MODEL COMES FROM: Red Car by J-Toastie [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/dVLJ5CjB0h)
- * 
+ * CAR 3D MODEL FOR PLAYER COMES FROM: Red Car by J-Toastie [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/dVLJ5CjB0h)
+ * CAR 3D MODELS COME FROM:
+ * Car by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/75h3mi6uHuC),
+ * Sports Car by Quaternius (https://poly.pizza/m/OyqKvX9xNh),
+ * Mazda RX-7 by IvOfficial [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/SnIoWlh7S2),
+ * Sports Car by Quaternius (https://poly.pizza/m/1mkmFkAz5v),
+ * Car by Quaternius (https://poly.pizza/m/unqqkULtRU),
+ * Police Car by Quaternius (https://poly.pizza/m/BwwnUrWGmV)
  */
 
 void drawGround(float groundWidth, float groundHeight, float groundLength, Color groundColor, int numSegments, float groundStartZ)
@@ -47,7 +53,6 @@ void drawGround(float groundWidth, float groundHeight, float groundLength, Color
     Vector3 rightLinePos = {laneWidth, lineHeight, z};
     DrawCube(rightLinePos, 0.2f, groundHeight * 0.1f, 0.1f, lineColor);
   }
-
 
 }
 
@@ -146,6 +151,29 @@ void unloadCarModel(Model &carModel)
   UnloadModel(carModel);
 }
 
+Model loadObstacleModel(const char* modelPath)
+{
+  Model carModel = LoadModel(modelPath);
+  return carModel;
+}
+
+void loadAllObstacleModels(Game& game)
+{
+  game.obstacleModels.push_back(loadObstacleModel("./assets/car_1.glb"));
+  game.obstacleModels.push_back(loadObstacleModel("./assets/car_2.glb"));
+  game.obstacleModels.push_back(loadObstacleModel("./assets/car_3.glb"));
+  game.obstacleModels.push_back(loadObstacleModel("./assets/car_4.glb"));
+}
+
+void unloadAllObstacleModels(Game& game)
+{
+  for(auto& model : game.obstacleModels)
+  {
+    unloadCarModel(model);
+  }
+  game.obstacleModels.clear();
+}
+
 int main()
 {
   // window creation
@@ -156,6 +184,8 @@ int main()
 
   Game game;
   game.obstaclePool.resize(game.MAX_OBSTACLES);
+
+  loadAllObstacleModels(game);
 
   // set up 3D camera
   Camera3D camera = {0};
@@ -290,26 +320,25 @@ int main()
         // get obstacle from the pool
         Obstacle& newObstacle = game.obstaclePool[game.activeObstacles];
 
-        // configure obstacle
-        newObstacle = {
-          (Vector3)
-          {
-            (float) GetRandomValue(-5, 5),
-            0.5f,
-            player.position.z - obstacleZOffset
-          },
-          (Vector3)
-          {
-            (float) GetRandomValue(1, 3),
-            (float) GetRandomValue(1, 3),
-            (float) GetRandomValue(1, 3)
-          },
-          ColorFromHSV(GetRandomValue(0, 360), 0.8f, 0.9f)
-        };
+        if(!game.obstacleModels.empty())
+        {
+          newObstacle = {
+            (Vector3) {
+              (float) GetRandomValue(-5, 5),
+              0.5f,
+              player.position.z - obstacleZOffset
+            },
+            (Vector3) {2.0f, 1.5f, 4.0f},
+            ColorFromHSV(GetRandomValue(0, 360), 0.8f, 0.9f),
+            {0}, {0},
+            game.obstacleModels[GetRandomValue(0, game.obstacleModels.size() - 1)],
+          };
 
-        game.activeObstacles++;
-        obstacleSpawnTimer = 0.0f;
-        obstacleSpawnInterval = GetRandomValue(1, 3) / (currentForwardSpeed / forwardSpeed);
+          game.activeObstacles++;
+          obstacleSpawnTimer = 0.0f;
+          obstacleSpawnInterval = GetRandomValue(1, 3) / (currentForwardSpeed / forwardSpeed);
+
+        }
       }
 
       // handles obstacle removal
@@ -380,10 +409,6 @@ int main()
     // draw the ground using a cube
     drawGround(groundWidth, groundHeight, groundLength, groundColor, numGroundSegments, groundStartZ);
 
-    // draw the player as a green cube
-    //DrawCube(player.position, player.size.x, player.size.y, player.size.z, player.color);
-    //DrawCubeWires(player.position, player.size.x, player.size.y, player.size.z, DARKGREEN);
-
     // draw the red car for player
     Vector3 modelPos = Vector3Add(player.position, carModelOffset);
     DrawModelEx(carModel, modelPos, (Vector3) {0.0f, 1.0f, 0.0f},
@@ -395,14 +420,14 @@ int main()
     for(int i = 0; i < game.activeObstacles; i++)
     {
       const Obstacle& obstacle = game.obstaclePool[i];
-      Color drawColor = obstacle.color;
+      
+      Vector3 modelPos = Vector3Add(obstacle.position, (Vector3) {0.0f, -0.5f, 0.0f});
+      DrawModelEx(obstacle.model, modelPos, (Vector3) {0.0f, 1.0f, 0.0f}, 180.0f, (Vector3) {carModelScale, carModelScale, carModelScale}, WHITE);
       
       if(checkCollisionPlayerObstacle(player.minBounds, player.maxBounds, obstacle.position, obstacle.size, obstacle.minBounds, obstacle.maxBounds))
       {
-        drawColor = YELLOW;
+        DrawBoundingBox((BoundingBox) {obstacle.minBounds, obstacle.maxBounds}, RED);
       }
-
-      DrawCube(obstacle.position, obstacle.size.x, obstacle.size.y, obstacle.size.z, drawColor);
     }
 
     EndMode3D();
@@ -434,6 +459,7 @@ int main()
     EndDrawing();
 
   }
+  unloadAllObstacleModels(game);
   unloadCarModel(carModel);
   CloseWindow();
   return 0;
