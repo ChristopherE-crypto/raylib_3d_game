@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include <raymath.h>
+#include <cstdio>
 #include "game.h"
 
 /*
@@ -173,6 +174,32 @@ void unloadAllObstacleModels(Game& game)
   game.obstacleModels.clear();
 }
 
+void drawSpeedGauge(float currentSpeed, float maxSpeed, int screenWidth, int screenHeight)
+{
+  Vector2 center = {(float) screenWidth - 100.0f, (float) screenHeight - 100.0f};
+  float radius = 50.0f;
+
+  // draw gauge background
+  DrawCircleV(center, radius, ColorAlpha(BLACK, 0.5f));
+  DrawCircleLinesV(center, radius, WHITE);
+
+  //calculate needle angle
+  float angle = 225 + (270 * (currentSpeed / maxSpeed));
+
+  // draw needle
+  Vector2 needleEnd = {
+    center.x + radius * cosf(angle * DEG2RAD),
+    center.y + radius * sinf(angle * DEG2RAD)
+  };
+
+  DrawLineEx(center, needleEnd, 3.0f, RED);
+
+  // draw speed text
+  char speedText[32];
+  snprintf(speedText, sizeof(speedText), "%.1f", currentSpeed);
+  DrawText(speedText, center.x - 15, center.y - 10, 20, WHITE);
+}
+
 int main()
 {
   // window creation
@@ -228,13 +255,15 @@ int main()
   // movement variables
   float forwardSpeed = 5.0f;
   float currentForwardSpeed = forwardSpeed;
+  float maxSpeed = 20.0f;
   float speedIncreaseRate = 0.5f;
   float lateralSpeed = 7.0f;
   float boundary = 8.0f;
   float obstacleSpeed = 3.0f;
   float currentObstacleSpeed = 0.0f;
-  float lateralSpeedPenalty = 0.5f;
+  float lateralSpeedPenalty = 0.05f;
   float minForwardSpeed = 3.0f;
+  float decelerationRate = 2.5f;
 
   // jumping variables
   bool isGrounded = false;
@@ -274,25 +303,20 @@ int main()
       player.position.z -= currentForwardSpeed * deltaTime;
       currentForwardSpeed += speedIncreaseRate * deltaTime;
 
-      // handle player lateral movement
-      if(IsKeyDown(KEY_A))
-      {
-        player.position.x -= lateralSpeed * deltaTime;
-        currentForwardSpeed = fmaxf(minForwardSpeed, currentForwardSpeed - lateralSpeedPenalty * deltaTime);
+      // Lateral movement with speed reduction
+      if(IsKeyDown(KEY_A) || IsKeyDown(KEY_D)) {
+        float targetSpeed = minForwardSpeed;
+        currentForwardSpeed = fmaxf(targetSpeed, currentForwardSpeed - decelerationRate * deltaTime);
+    
+        // Actual movement
+        if(IsKeyDown(KEY_A)) player.position.x -= lateralSpeed * deltaTime;
+        if(IsKeyDown(KEY_D)) player.position.x += lateralSpeed * deltaTime;
+        player.position.x = Clamp(player.position.x, -boundary, boundary);
       }
-
-      if(IsKeyDown(KEY_D))
-      {
-        player.position.x += lateralSpeed * deltaTime;
-        currentForwardSpeed = fmaxf(minForwardSpeed, currentForwardSpeed - lateralSpeedPenalty * deltaTime);
-      }
-
-      player.position.x = Clamp(player.position.x, -boundary, boundary);
-
-      if(!IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))
-      {
-        currentForwardSpeed = fminf(currentForwardSpeed * 1.2f, 20.0f);
-      }
+      else {
+        // Speed recovery when not moving laterally
+        currentForwardSpeed = fminf(maxSpeed, currentForwardSpeed + speedIncreaseRate * deltaTime);
+      }      
 
       // handle player jumping
       if(IsKeyDown(KEY_SPACE) && isGrounded)
@@ -480,7 +504,8 @@ int main()
           screenHeight/2 + 50, 30, YELLOW);
 
     }
-
+    
+    drawSpeedGauge(currentForwardSpeed, maxSpeed, screenWidth, screenHeight);
     EndDrawing();
 
   }
