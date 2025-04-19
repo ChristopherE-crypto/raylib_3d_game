@@ -2,6 +2,11 @@
 #include <raymath.h>
 #include "game.h"
 
+/*
+ * CAR 3D MODEL COMES FROM: Red Car by J-Toastie [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza (https://poly.pizza/m/dVLJ5CjB0h)
+ * 
+ */
+
 void drawGround(float groundWidth, float groundHeight, float groundLength, Color groundColor, int numSegments, float groundStartZ)
 {
   // p, w, h, l, c
@@ -131,6 +136,16 @@ void handleCollisions(Vector3& playerPos, Vector3 playerSize, float& jumpVelocit
   }
 }
 
+void loadCarModel(Model &carModel)
+{
+  carModel = LoadModel("./assets/Red Car.glb");
+}
+
+void unloadCarModel(Model &carModel)
+{
+  UnloadModel(carModel);
+}
+
 int main()
 {
   // window creation
@@ -150,6 +165,12 @@ int main()
   camera.fovy = 45.0f;
   camera.projection = CAMERA_PERSPECTIVE;
 
+  // player car model data
+  Model carModel;
+  Texture2D carTexture;
+  Vector3 carModelOffset = {0.0f, -0.5f, 0.0f};
+  float carModelScale = 2.0f;
+
   // player data
   Vector3 playerPos = {0.0f, 0.5f, 0.0f};
   float playerWidth = 1.0f;
@@ -165,6 +186,9 @@ int main()
     {0},
     {0}
   };
+
+  // load car model
+  loadCarModel(carModel);
 
   // obstacle system
   std::vector<Obstacle> obstacles;
@@ -357,8 +381,15 @@ int main()
     drawGround(groundWidth, groundHeight, groundLength, groundColor, numGroundSegments, groundStartZ);
 
     // draw the player as a green cube
-    DrawCube(player.position, player.size.x, player.size.y, player.size.z, player.color);
-    DrawCubeWires(player.position, player.size.x, player.size.y, player.size.z, DARKGREEN);
+    //DrawCube(player.position, player.size.x, player.size.y, player.size.z, player.color);
+    //DrawCubeWires(player.position, player.size.x, player.size.y, player.size.z, DARKGREEN);
+
+    // draw the red car for player
+    Vector3 modelPos = Vector3Add(player.position, carModelOffset);
+    DrawModelEx(carModel, modelPos, (Vector3) {0.0f, 1.0f, 0.0f},
+        0.0f,
+        (Vector3) {carModelScale, carModelScale, carModelScale},
+        WHITE);
 
     // draw obstacles
     for(int i = 0; i < game.activeObstacles; i++)
@@ -403,7 +434,7 @@ int main()
     EndDrawing();
 
   }
-
+  unloadCarModel(carModel);
   CloseWindow();
   return 0;
 }
