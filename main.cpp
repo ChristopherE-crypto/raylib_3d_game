@@ -228,11 +228,13 @@ int main()
   // movement variables
   float forwardSpeed = 5.0f;
   float currentForwardSpeed = forwardSpeed;
-  float speedIncreaseRate = 0.1f;
+  float speedIncreaseRate = 0.5f;
   float lateralSpeed = 7.0f;
   float boundary = 8.0f;
   float obstacleSpeed = 3.0f;
   float currentObstacleSpeed = 0.0f;
+  float lateralSpeedPenalty = 0.5f;
+  float minForwardSpeed = 3.0f;
 
   // jumping variables
   bool isGrounded = false;
@@ -273,9 +275,24 @@ int main()
       currentForwardSpeed += speedIncreaseRate * deltaTime;
 
       // handle player lateral movement
-      if(IsKeyDown(KEY_A)) player.position.x -= lateralSpeed * deltaTime;
-      if(IsKeyDown(KEY_D)) player.position.x += lateralSpeed * deltaTime;
+      if(IsKeyDown(KEY_A))
+      {
+        player.position.x -= lateralSpeed * deltaTime;
+        currentForwardSpeed = fmaxf(minForwardSpeed, currentForwardSpeed - lateralSpeedPenalty * deltaTime);
+      }
+
+      if(IsKeyDown(KEY_D))
+      {
+        player.position.x += lateralSpeed * deltaTime;
+        currentForwardSpeed = fmaxf(minForwardSpeed, currentForwardSpeed - lateralSpeedPenalty * deltaTime);
+      }
+
       player.position.x = Clamp(player.position.x, -boundary, boundary);
+
+      if(!IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))
+      {
+        currentForwardSpeed = fminf(currentForwardSpeed * 1.2f, 20.0f);
+      }
 
       // handle player jumping
       if(IsKeyDown(KEY_SPACE) && isGrounded)
