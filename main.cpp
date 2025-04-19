@@ -13,6 +13,37 @@ void drawGround(float groundWidth, float groundHeight, float groundLength, Color
     DrawCubeWires(groundPos, groundWidth, groundHeight, groundLength, groundColor);
   }
 
+  // street line variables
+  float lineHeight = groundHeight * 1.1f;
+  float lineWidth = 0.5f;
+  float lineLength = 2.0f;
+  float lineSpacing = 5.0f;
+  Color lineColor = WHITE;
+
+  // calculate total length to cover
+  float totalLength = numSegments * groundLength;
+
+  // draw dashed lines in the center
+  for(float z = groundStartZ; z < groundStartZ + totalLength; z += lineSpacing)
+  {
+    Vector3 linePos = {0.0f, lineHeight, z + lineLength/2};
+    DrawCube(linePos, lineWidth, groundHeight * 0.1f, lineLength, lineColor);
+  }
+
+  // draw line markers (side lines)
+  float laneWidth = groundWidth * 0.45f;
+  for(float z = groundStartZ; z < groundStartZ + totalLength; z += 0.1f)
+  {
+    // left lane marker
+    Vector3 leftLinePos = {-laneWidth, lineHeight, z};
+    DrawCube(leftLinePos, 0.2f, groundHeight * 0.1f, 0.1f, lineColor);
+
+    // right lane marker
+    Vector3 rightLinePos = {laneWidth, lineHeight, z};
+    DrawCube(rightLinePos, 0.2f, groundHeight * 0.1f, 0.1f, lineColor);
+  }
+
+
 }
 
 // function used for detecting collision (Bounding boxes)
@@ -158,7 +189,7 @@ int main()
   float groundWidth = 20.0f;
   float groundHeight = 0.1f;
   float groundLength = 100.0f;
-  Color groundColor = GRAY;
+  Color groundColor = DARKGRAY;
   int numGroundSegments = 3;
   float groundStartZ = -groundLength * 2;
   const float groundLevel = 1.0f;
