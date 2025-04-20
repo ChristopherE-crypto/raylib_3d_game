@@ -12,6 +12,8 @@
  * Sports Car by Quaternius (https://poly.pizza/m/1mkmFkAz5v),
  * Car by Quaternius (https://poly.pizza/m/unqqkULtRU),
  * Police Car by Quaternius (https://poly.pizza/m/BwwnUrWGmV)
+ *
+ * BACKGROUND MUSIC FROM SUNO: https://suno.com/song/e1c1af2a-ee3e-4c9e-9ee2-4a41f3136048 (Endless Ride)
  */
 
 void drawGround(float groundWidth, float groundHeight, float groundLength, Color groundColor, int numSegments, float groundStartZ)
@@ -200,16 +202,39 @@ void drawSpeedGauge(float currentSpeed, float maxSpeed, int screenWidth, int scr
   DrawText(speedText, center.x - 15, center.y - 10, 20, WHITE);
 }
 
+void loadGameAudio(Game& game)
+{
+  game.backgroundMusic = LoadMusicStream("./assets/background_song.mp3");
+
+  // start playing background music
+  PlayMusicStream(game.backgroundMusic);
+  SetMusicVolume(game.backgroundMusic, 0.5f);
+}
+
+void unloadGameAudio(Game& game)
+{
+  if(IsAudioDeviceReady())
+  {
+    StopMusicStream(game.backgroundMusic);
+    UnloadMusicStream(game.backgroundMusic);
+  }
+}
+
 int main()
 {
   // window creation
   const int screenWidth = 800;
   const int screenHeight = 600;
   InitWindow(screenWidth, screenHeight, "Learning 3D");
+  // for audio
+  InitAudioDevice();
+
   SetTargetFPS(60);
 
   Game game;
   game.obstaclePool.resize(game.MAX_OBSTACLES);
+
+  loadGameAudio(game);
 
   loadAllObstacleModels(game);
 
@@ -430,6 +455,7 @@ int main()
 
     }
     else {
+      StopMusicStream(game.backgroundMusic);
       // game over state
       if(IsKeyPressed(KEY_R))
       {
@@ -439,6 +465,7 @@ int main()
         currentForwardSpeed = forwardSpeed;
         score = 0;
         gameRunning = true;
+        PlayMusicStream(game.backgroundMusic);
       }
 
     }
@@ -448,6 +475,8 @@ int main()
     // update camera position
     camera.target = (Vector3) {player.position.x, player.position.y + 1.0f, player.position.z};
     camera.position = (Vector3) {Lerp(camera.position.x, player.position.x, 0.1f), 5.0f, player.position.z + 10.0f};
+
+    UpdateMusicStream(game.backgroundMusic);
 
     BeginDrawing();
 
@@ -511,6 +540,8 @@ int main()
   }
   unloadAllObstacleModels(game);
   unloadCarModel(carModel);
+  unloadGameAudio(game);
+  CloseAudioDevice();
   CloseWindow();
   return 0;
 }
