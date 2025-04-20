@@ -53,6 +53,9 @@ struct Game {
   int activeObstacles = 0;
   const int MAX_OBSTACLES = 100;
   std::vector<Model> obstacleModels;
+
+  // audio variables
+  Music backgroundMusic;
 };
 
 #endif
