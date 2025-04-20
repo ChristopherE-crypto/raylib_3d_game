@@ -13,6 +13,13 @@ struct Obstacle {
     Model model;
 };
 
+struct Building {
+  Vector3 position;
+  Vector3 size;
+  Color color;
+  bool hasWindowLights;
+};
+
 struct Player {
     Vector3 position;
     Vector3 size; // x: width, y: height, z: length
@@ -56,6 +63,9 @@ struct Game {
 
   // audio variables
   Music backgroundMusic;
+
+  // for buildings
+  std::vector<Building> buildings;
 };
 
 #endif
