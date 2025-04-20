@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include <raymath.h>
+#include <rlgl.h>
 #include <cstdio>
 #include "game.h"
 
@@ -220,6 +221,70 @@ void unloadGameAudio(Game& game)
   }
 }
 
+void generateBuildings(Game& game)
+{
+  const float roadHalfWidth = 10.0f; // Match your ground width
+  const float buildingSpacing = 15.0f;
+  const int buildingPairs = 25; // Buildings per side
+    
+  for (int i = 0; i < buildingPairs; i++) {
+      // Left side buildings
+      game.buildings.push_back({
+          (Vector3){ -roadHalfWidth - 8.0f - GetRandomValue(0, 10), 
+                      0.0f, 
+                      -i * buildingSpacing - GetRandomValue(0, 10) },
+          (Vector3){ (float)GetRandomValue(5, 12), 
+                      (float)GetRandomValue(10, 30) + 50.0f, 
+                      (float)GetRandomValue(5, 10) },
+          ColorFromHSV(GetRandomValue(0, 40), 0.7f, 0.8f), // Earth tones
+          (GetRandomValue(0, 1) == 1) // Random window lights
+      });
+        
+      // Right side buildings
+      game.buildings.push_back({
+          (Vector3){ roadHalfWidth + 8.0f + GetRandomValue(0, 10), 
+                      0.0f, 
+                      -i * buildingSpacing - GetRandomValue(0, 10) },
+          (Vector3){ (float)GetRandomValue(5, 12), 
+                      (float)GetRandomValue(10, 30) + 50.0f, 
+                      (float)GetRandomValue(5, 10) },
+          ColorFromHSV(GetRandomValue(200, 240), 0.7f, 0.8f), // Cool tones
+          (GetRandomValue(0, 1) == 1)
+      });
+  }
+}
+
+void drawBuildings(const Game& game)
+{
+  for (const auto& building : game.buildings) {
+      // Main building
+      DrawCube(building.position, building.size.x, building.size.y, building.size.z, building.color);
+        
+      // Windows (if enabled)
+      if(building.hasWindowLights) {
+          int windowRows = building.size.y / 3;
+          int windowCols = building.size.x / 3;
+            
+          for (int y = 0; y < windowRows; y++) {
+              for (int x = 0; x < windowCols; x++) {
+                  if (GetRandomValue(0, 3) == 0) continue; // Random skip
+                    
+                  Vector3 windowPos = {
+                        building.position.x - building.size.x/2 + x * 3.0f + 1.5f,
+                        building.position.y - building.size.y/2 + y * 3.0f + 1.5f,
+                        building.position.z
+                  };
+                    
+                  DrawCube(windowPos, 1.0f, 1.0f, 0.1f, YELLOW);
+              }
+          }
+      }
+        
+      // Outline
+      DrawCubeWires(building.position, building.size.x, building.size.y, building.size.z, DARKGRAY);
+    }
+}
+
 int main()
 {
   // window creation
@@ -312,6 +377,8 @@ int main()
   float gameOverTimer = 0.0f;
   Vector3 worldOffset = {0};
   const float rebaseThreshold = 100.0f;
+
+  generateBuildings(game);
 
   // game loop
   while(!WindowShouldClose())
@@ -480,12 +547,15 @@ int main()
 
     BeginDrawing();
 
-    ClearBackground(RAYWHITE);
+    ClearBackground(BLACK);
 
     BeginMode3D(camera);
 
     // draw the ground using a cube
     drawGround(groundWidth, groundHeight, groundLength, groundColor, numGroundSegments, groundStartZ);
+
+    // draw buildings
+    drawBuildings(game);
 
     // draw the red car for player
     Vector3 modelPos = Vector3Add(player.position, carModelOffset);
