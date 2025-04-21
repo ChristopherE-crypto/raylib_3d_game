@@ -147,7 +147,7 @@ void handleCollisions(Vector3& playerPos, Vector3 playerSize, float& jumpVelocit
 
 void loadCarModel(Model &carModel)
 {
-  carModel = LoadModel("./assets/Red Car.glb");
+  carModel = LoadModel("./assets/models/Red Car.glb");
 }
 
 void unloadCarModel(Model &carModel)
@@ -163,9 +163,9 @@ Model loadObstacleModel(const char* modelPath)
 
 void loadAllObstacleModels(Game& game)
 {
-  game.obstacleModels.push_back(loadObstacleModel("./assets/car_1.glb"));
-  game.obstacleModels.push_back(loadObstacleModel("./assets/car_2.glb"));
-  game.obstacleModels.push_back(loadObstacleModel("./assets/car_4.glb"));
+  game.obstacleModels.push_back(loadObstacleModel("./assets/models/car_1.glb"));
+  game.obstacleModels.push_back(loadObstacleModel("./assets/models/car_2.glb"));
+  game.obstacleModels.push_back(loadObstacleModel("./assets/models/car_4.glb"));
 }
 
 void unloadAllObstacleModels(Game& game)
@@ -205,7 +205,7 @@ void drawSpeedGauge(float currentSpeed, float maxSpeed, int screenWidth, int scr
 
 void loadGameAudio(Game& game)
 {
-  game.backgroundMusic = LoadMusicStream("./assets/background_song.mp3");
+  game.backgroundMusic = LoadMusicStream("./assets/audio/background_song.mp3");
 
   // start playing background music
   PlayMusicStream(game.backgroundMusic);
@@ -290,7 +290,7 @@ int main()
   // window creation
   const int screenWidth = 800;
   const int screenHeight = 600;
-  InitWindow(screenWidth, screenHeight, "Learning 3D");
+  InitWindow(screenWidth, screenHeight, "Car Game");
   // for audio
   InitAudioDevice();
 
